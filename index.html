@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jarvis Background Service</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="background:#000; color:#00d4ff; font-family:sans-serif; text-align:center; padding-top:50px;">
+    <h3>JARVIS SYSTEM ONLINE</h3>
+    <p id="statusText">Listening for "Jarves active"...</p>
+    <input type="file" id="fileInput" style="display:none" accept="image/*">
+
+    <script>
+        const statusText = document.getElementById('statusText');
+        const fileInput = document.getElementById('fileInput');
+        const RENDER_URL = "https://jarvis-backend-nc6p.onrender.com"; 
+
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.continuous = true;
+        
+        function speak(msg) {
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+        }
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+            console.log("Heard:", transcript);
+
+            if (transcript.includes("jarves active") || transcript.includes("jarvis active")) {
+                speak("At your service. Please select the image.");
+                fileInput.click();
+            }
+        };
+
+        fileInput.onchange = async () => {
+            statusText.innerText = "Processing...";
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            const resp = await fetch(RENDER_URL, { method: 'POST', body: formData });
+            const blob = await resp.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "Jarvis_File.pdf";
+            a.click();
+            speak("Task complete, sir.");
+            statusText.innerText = "System Standby.";
+        };
+
+        recognition.onend = () => recognition.start();
+        recognition.start();
+    </script>
+</body>
+</html>
